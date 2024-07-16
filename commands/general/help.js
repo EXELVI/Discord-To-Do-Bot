@@ -5,7 +5,7 @@ module.exports = {
     description: "Shows all commands",
     permission: [],
     category: "general",
-    async execute(interaction, client) {
+    async execute(interaction) {
         const db = await require("../../db.js")
         var commandsid = await db.collection("commands").find().toArray()
         let totalPage = 3;

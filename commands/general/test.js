@@ -9,10 +9,9 @@ module.exports = {
     /**
 * Esegue la gestione dell'evento di creazione di un'interazione.
 * @param {Discord.BaseInteraction} interaction - L'interazione creata.
-*  * @param {Discord.Client} client - L'interazione creata.00
 * @returns {Promise<void>} - Una Promise che rappresenta l'avvenuta gestione dell'interazione.
 */
-    async execute(interaction, client) {
+    async execute(interaction) {
 
         var clients = await client.shard.broadcastEval(x => { return { ready: x.isReady(), ping: x.ws.ping } })
         var fields = []
