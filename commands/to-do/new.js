@@ -50,9 +50,9 @@ module.exports = {
 
         var month = dataaa.getMonth() + 1,
         day =    dataaa.getDate(), 
-        hour =   dataaa.getHours(), 
-        minute = dataaa.getSeconds() + 5 > 60 ? dataaa.getMinutes() + 1 :dataaa.getMinutes(),
-        second = dataaa.getSeconds() + 5 > 60 ? 0 : dataaa.getSeconds() + 5
+        hour =   dataaa.getMinutes() + 5 > 60 ? dataaa.getHours() + 1 : dataaa.getHours(),
+        minute = dataaa.getMinutes() + 5 > 60 ? dataaa.getMinutes() - 55 : dataaa.getMinutes() + 5,
+        second = dataaa.getSeconds()
 
         if (date) {
 
@@ -62,6 +62,19 @@ module.exports = {
             var rowUp = new Discord.ActionRowBuilder()
             var rowDown = new Discord.ActionRowBuilder()
             var rowDown10 = new Discord.ActionRowBuilder()
+            var row = new Discord.ActionRowBuilder()
+
+            var confirm = new Discord.ButtonBuilder()
+                .setCustomId("confirm")
+                .setLabel("Confirm")
+                .setStyle("Success")
+
+            var cancel = new Discord.ButtonBuilder()
+                .setCustomId("cancel")
+                .setLabel("Cancel")
+                .setStyle("Danger")
+
+            row.addComponents(confirm, cancel)
 
             format.split("|").forEach((x, i) => {
                 console.log(x, i)
@@ -97,12 +110,63 @@ module.exports = {
                 .setTitle("Date picker")
                 .setDescription("Select the date for the to-do" + 
                     "\n\n```" +
-                    "MM  /  DD / HH | mm : ss " +
-                    //`-- ${month.toString().padStart(2, "0")} -- / --- ${day.toString().padStart(2, "0")} --- / --- ${hour.toString().padStart(2, "0")} --- | --- ${minute.toString().padStart(2, "0")} --- : --- ${second.toString().padStart(2, "0")} ---` + 
+                    "MM   /   DD   /   HH  |   mm   :   ss \n" +
+                    `${month.toString().padStart(2, "0")}   /   ${day.toString().padStart(2, "0")}   /   ${hour.toString().padStart(2, "0")}  |   ${minute.toString().padStart(2, "0")}   :   ${second.toString().padStart(2, "0")}` +
                     "```"
                 )
 
-            interaction.reply({ embeds: [embed], components: [rowUp10, rowUp, rowDown, rowDown10] })
+            interaction.reply({ embeds: [embed], components: [rowUp10, rowUp, rowDown, rowDown10, row] }).then(() => {
+                const collector = interaction.channel.createMessageComponentCollector({ filter: i => i.user.id == interaction.user.id, time: 60000 })
+
+                collector.on("collect", async i => {
+                    i.deferUpdate()
+                
+                    if (i.customId.startsWith("up10")) {
+                        var index = i.customId.replace("up10", "")
+                        if (index == 0) month += 10
+                        if (index == 1) day += 10
+                        if (index == 2) hour += 10
+                        if (index == 3) minute += 10
+                        if (index == 4) second += 10
+                    } else if (i.customId.startsWith("up")) {
+                        var index = i.customId.replace("up", "")
+                        if (index == 0) month++
+                        if (index == 1) day++
+                        if (index == 2) hour++
+                        if (index == 3) minute++
+                        if (index == 4) second++
+                    } else if (i.customId.startsWith("down")) {
+                        var index = i.customId.replace("down", "")
+                        if (index == 0) month--
+                        if (index == 1) day--
+                        if (index == 2) hour--
+                        if (index == 3) minute--
+                        if (index == 4) second--
+                    } else if (i.customId.startsWith("down10")) {
+                        var index = i.customId.replace("down10", "")
+                        if (index == 0) month -= 10
+                        if (index == 1) day -= 10
+                        if (index == 2) hour -= 10
+                        if (index == 3) minute -= 10
+                        if (index == 4) second -= 10
+                    } else if (i.customId == "confirm") {
+                        var date = new Date()
+                        date.setMonth(month)
+                        date.setDate(day)
+                        date.setHours(hour)
+                        date.setMinutes(minute)
+                        date.setSeconds(second)
+                        console.log(date)
+                        collector.stop()
+                    } else if (i.customId == "cancel") {
+                        collector.stop()
+                    }                    
+            
+
+                
+
+                })
+            })
 
         }
 
