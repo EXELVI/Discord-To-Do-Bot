@@ -98,7 +98,30 @@ User: ${client.user.tag}
                     }
                 })
 
-           
+            const rest = new Discord.REST().setToken(process.env.token);
+
+            console.log(`Started refreshing ${globalCommands.length} application (/) commands.`);
+
+            const data = await rest.put(
+                Discord.Routes.applicationCommands("1133848954333827242"),
+                { body: globalCommands },
+            );
+
+            console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+
+
+            data.forEach(async cmd => {
+                var cmdDb = await db.collection("commands").findOne({ name: cmd.name })
+                if (!cmdDb) {
+                    db.collection("commands").insertOne({ name: cmd.name, id: cmd.id })
+                } else {
+
+                    db.collection("commands").updateOne({ name: cmd.name }, { $set: { id: cmd.id } })
+                }
+
+                console.log("------------------------ Created ------------------------\n", cmd.name)
+            })
+
 
             console.log("Commands created!")
         } else console.log("Commands creation disabled!")
