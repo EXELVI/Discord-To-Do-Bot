@@ -10,3 +10,4 @@ manager.on('shardCreate', shard => console.log(`☑️ Launched shard #${shard.i
 
 manager.spawn();
 
+const databasePromise = require('./db.js');
