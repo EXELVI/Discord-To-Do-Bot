@@ -1,14 +1,15 @@
 const Discord = require('discord.js');
+const { permission } = require('process');
 
 module.exports = {
     name: "test",
-    onlyStaff: false,
-    description: "Manda le informazioni del bot",
-    tipo: "general",
+    description: "Sends bot stats",
+    permission: [],
+    category: "general",
     /**
 * Esegue la gestione dell'evento di creazione di un'interazione.
 * @param {Discord.BaseInteraction} interaction - L'interazione creata.
-*  * @param {Discord.Client} client - L'interazione creata.
+*  * @param {Discord.Client} client - L'interazione creata.00
 * @returns {Promise<void>} - Una Promise che rappresenta l'avvenuta gestione dell'interazione.
 */
     async execute(interaction, client) {

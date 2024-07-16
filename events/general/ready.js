@@ -18,9 +18,6 @@ function fadeColors(colors) {
     const startColor = [0, 0, 255];  // Blu
     const endColor = [255, 0, 0];  // Rosso
 
-    const startColorDev = [0, 0, 255];  // Blu
-    const endColorDev = [0, 255, 0];  // Rosso
-
 
     const colorSteps = colors.length - 1;
 
@@ -54,7 +51,7 @@ User: ${client.user.tag}
         const databasePromise = require('../../db.js');
 
         databasePromise.then(async database => {
-        var db = await database.db("inside")
+        var db = await database.db("to-do")
         if (process.env.commands != "false") {
 
             const globalCommands = []
@@ -103,7 +100,7 @@ User: ${client.user.tag}
             console.log(`Started refreshing ${globalCommands.length} application (/) commands.`);
 
             const data = await rest.put(
-                Discord.Routes.applicationCommands("1133848954333827242"),
+                Discord.Routes.applicationCommands("1262666648498995273"),
                 { body: globalCommands },
             );
 

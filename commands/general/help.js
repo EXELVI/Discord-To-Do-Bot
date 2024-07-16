@@ -1,17 +1,15 @@
 const Discord = require('discord.js');
-const { getTranslation, getUserLanguage } = require("../../functions/better.js")
 
 module.exports = {
     name: "help",
-    description: "",
-    tipo: "general",
+    description: "Shows all commands",
+    permission: [],
+    category: "general",
     async execute(interaction, client) {
         const db = await require("../../db.js")
         var commandsid = await db.collection("commands").find().toArray()
         let totalPage = 3;
         let page = 1;
-
-        var userlanguage = await getUserLanguage(interaction.member, interaction.guild)
 
         var page1 = new Discord.EmbedBuilder()
 
