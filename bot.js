@@ -27,6 +27,7 @@ for (const folder of eventsFolders) {
 }
 
 client.on("interactionCreate", async interaction => {
+    
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
     if (command.permissions && !interaction.member.permissions.has(command.permissions)) { return interaction.reply({ content: 'You do not have permission to use this command!', ephemeral: true }); }

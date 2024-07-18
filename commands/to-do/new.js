@@ -9,8 +9,6 @@ module.exports = {
     "integration_types": [0, 1],
     "contexts": [0, 1, 2],
     data: {
-        name: "new",
-        description: "Create a new to-do",
         options: [
             {
                 name: "title",
@@ -21,6 +19,12 @@ module.exports = {
             {
                 name: "description",
                 description: "The description of the to-do",
+                type: 3,
+                required: false
+            },
+            {
+                name: "users", 
+                description: "The users to share the to-do with",
                 type: 3,
                 required: false
             },
@@ -45,6 +49,7 @@ module.exports = {
         const title = interaction.options.getString("title")
         const description = interaction.options.getString("description")
         const date = interaction.options.getBoolean("date")
+        console.log(interaction.options)
 
         var dataaa = new Date()
 
@@ -68,13 +73,13 @@ module.exports = {
 
             db.collection("to-do").insertOne(toDo)
 
-            var embed = new Discord.EmbedBuilder()
+            let embed = new Discord.EmbedBuilder()
                 .setTitle("To-do created")
                 .setDescription("The to-do has been created successfully")
                 .addFields({ name: "Title", value: title, inline: true }, { name: "Description", value: description, inline: true }, { name: "Date", value: date ? discordTimestamp(date, "FULL") : "No date", inline: true })
                 .setColor("Green")
 
-            if (interaction.isRepliable()) {
+            if (!date) {
                 interaction.reply({ embeds: [embed], ephemeral: true })
             } else {
                 interaction.editReply({ embeds: [embed], ephemeral: true, components: [] })

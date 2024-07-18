@@ -1,3 +1,6 @@
+let listFormats = ['RELATIVE', 'DATE', 'TIME', 'SHORT TIME', 'FULL']
+let listUnformatted = ['R', 'D', 'T', 't', 'F']
+
 module.exports = functions = {
     /**
     * Converte una timestamp in una data formattata per Discord.
