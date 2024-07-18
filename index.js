@@ -16,6 +16,7 @@ databasePromise.then(async database => {
 
     setInterval(async () => {
         var todos = await database.db("to-do").collection("to-do").find().toArray()
+        todos = todos.filter(x => !x.completed && !x.reminded && x.date)
 
         todos.forEach(async todo => {
             if (todo.reminded) return;
@@ -25,11 +26,27 @@ databasePromise.then(async database => {
             if (todoDate <= now) {
                 var users = todo.users;
                 users.forEach(async user => {
-                    var userFetched = await manager.broadcastEval((client) => client.users.cache.get(user));
-                    var user = userFetched.find(x => x);
-                    if (user) {
-                        user.send({ content: `🔔 **Reminder**\n\n**Title:** ${todo.title}\n**Description:** ${todo.description}` });
-                    }
+                    var embed = new Discord.EmbedBuilder()
+                    .setTitle("To-do reminder")
+                    .setDescription(todo.title)
+                    .addFields([
+                        {name : "Description", value: todo.description || "No description"},
+                        {name: "Created by", value: `<@${todo.creator}>`},
+                        {name: "Created at", value: discordTimestamp(todo.timestamp, "Relative")},
+                        {name: "ID", value: "```" + todo.id + "```"}
+                    ])
+
+                    await manager.broadcastEval(async (client, {user, embed}) => {
+                        var usr = await client.users.cache.get(user)
+                        if (usr) {
+                 
+                        usr.send({embeds: [embed]})
+                            
+                        }
+
+                    }, { context: { user: user, embed: embed } });
+
+
                 })
 
                 database.db("to-do").collection("to-do").updateOne({ id: todo.id }, { $set: { reminded: true } })

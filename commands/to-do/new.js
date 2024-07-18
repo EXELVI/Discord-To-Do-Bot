@@ -24,7 +24,7 @@ module.exports = {
             },
             {
                 name: "users",
-                description: "The users to share the to-do with",
+                description: "The users to share the to-do with (MAX 10)",
                 type: 3,
                 required: false
             },
@@ -100,7 +100,7 @@ module.exports = {
                 .addFields({ name: "Title", value: title, inline: true },
                     { name: "Description", value: description || "No Description", inline: true },
                     { name: "Users [" + usersID.length + "]", value: usersID.length > 0 ? usersID.map(x => `<@${x}>`).join(", ") : "No users", inline: false },
-                    { name: "Date", value: date ? discordTimestamp(date, "FULL") : "No date", inline: true })
+                    { name: "Reminder Date", value: date ? discordTimestamp(date, "FULL") : "No date", inline: true })
                 .setColor("Green")
 
             if (!date) {

@@ -17,7 +17,7 @@ module.exports = {
                 required: false
             },
             {
-                name: "description",
+                name: "id",
                 description: "Search by ID",
                 type: 3,
                 required: false
@@ -57,9 +57,9 @@ module.exports = {
         const db = await databasePromise.db("to-do")
 
         const title = interaction.options.getString("title")
-        const description = interaction.options.getString("description")
+        const id = interaction.options.getString("id")
 
-        if (!title && !description) {
+        if (!title && !id) {
             
             var todos = await db.collection("to-do").find().toArray()
             todos = todos.filter(x => x.users.includes(interaction.user.id))
@@ -69,9 +69,8 @@ module.exports = {
             for (var i = 0; todos.length > i; i++) {
 
                 var reminded = todos[i].reminded || false
-                console.log(todoDate, new Date().getTime(), reminded)
                 embedFields.push({ name: (todos[i].completed ? ":white_check_mark: " : (!todos[i].date ? ":red_circle: " : (!todos[i].date ? "🔴" : (reminded ? ":bell:" : ":no_bell:")))) + todos[i].title, value: todos[i].description || "No description", inline: false })
-                menuOptions.push({ label: todos[i].title, value: todos[i].id, description: todos[i].description || "No description", emoji: todos[i].completed ? "✅" : (!todos[i].date ? "🔴" : (reminded ? "🔔" : "�")) })
+                menuOptions.push({ label: todos[i].title, value: todos[i].id, description: todos[i].description || "No description", emoji: todos[i].completed ? "✅" : (!todos[i].date ? "🔴" : (reminded ? "🔔" : "🔕")) })
             }
 
             var embed = new Discord.EmbedBuilder()
@@ -87,12 +86,47 @@ module.exports = {
                 .addComponents(menu)
 
             interaction.reply({ embeds: [embed], components: [row] }).then(msg => {
+                var collector = msg.createMessageComponentCollector()
+                collector.on("collect", async i => {
+                    i.deferUpdate()
+                    var todo = todos.find(x => x.id == i.values[0])
+                    var embed = new Discord.EmbedBuilder()
+                        .setTitle(todo.title)
+                        .setDescription(todo.description)
+                        .addFields([
+                            { name: "Created by", value: `<@${todo.creator}>`, inline: true },
+                            { name: "Created at", value: discordTimestamp(todo.timestamp, "Relative"), inline: true },
+                            { name: "Completed", value: todo.completed ? "Yes" : "No", inline: true },
+                            { name: "Completed by", value: todo.completedBy ? `<@${todo.completedBy}>` : "No one", inline: true },
+                            { name: "Completed at", value: todo.completedTimestamp ? discordTimestamp(todo.completedTimestamp, "Relative") : "No one", inline: true },
+                            { name: "Reminded", value: todo.reminded ? "Yes" : "No", inline: true },
+                            { name: "Remind date", value: todo.date ? discordTimestamp(todo.date, "Relative") : "No date", inline: true },
+                            { name: "User" + (todo.users > 1 ? "" : "s [" + todo.users.length + "]"), value: todo.users.map(x => `<@${x}>`).join(", "), inline: false },
+                            { name: "ID", value: "```" + todo.id + "```", inline: false }
+                            
+                        ])
+                    interaction.editReply({ embeds: [embed] })
+                })
 
             })
-
-
-
-                
+        } else {
+            var todo = await db.collection("to-do").findOne({ $or: [{ title: title }, { id: id }] })
+            if (!todo) return interaction.reply({ content: "No to-do found", ephemeral: true })
+            var embed = new Discord.EmbedBuilder()
+                .setTitle(todo.title)
+                .setDescription(todo.description)
+                .addFields([
+                    { name: "Created by", value: `<@${todo.creator}>`, inline: true },
+                    { name: "Created at", value: discordTimestamp(todo.timestamp, "Relative"), inline: true },
+                    { name: "Completed", value: todo.completed ? "Yes" : "No", inline: true },
+                    { name: "Completed by", value: todo.completedBy ? `<@${todo.completedBy}>` : "No one", inline: true },
+                    { name: "Completed at", value: todo.completedTimestamp ? discordTimestamp(todo.completedTimestamp, "Relative") : "No one", inline: true },
+                    { name: "Reminded", value: todo.reminded ? "Yes" : "No", inline: true },
+                    { name: "Remind date", value: todo.date ? discordTimestamp(todo.date, "Relative") : "No date", inline: true },
+                    { name: "Users", value: todo.users.map(x => `<@${x}>`).join(", "), inline: false },
+                    { name: "ID", value: "```" + todo.id + "```", inline: false }
+                ])
+            interaction.reply({ embeds: [embed] })
         }
        
 
