@@ -23,7 +23,7 @@ module.exports = {
                 required: false
             },
             {
-                name: "users", 
+                name: "users",
                 description: "The users to share the to-do with",
                 type: 3,
                 required: false
@@ -43,13 +43,28 @@ module.exports = {
 * @returns {Promise<void>} - Una Promise che rappresenta l'avvenuta gestione dell'interazione.
 */
 
-    async execute(interaction, client) {
+    async execute(interaction) {
         const databasePromise = await require("../../db.js")
+        const client = require("../../client.js")
 
         const title = interaction.options.getString("title")
         const description = interaction.options.getString("description")
         const date = interaction.options.getBoolean("date")
-        console.log(interaction.options)
+        var userString = interaction.options.getString("users")
+        var usersID = []
+
+
+        if (userString) {
+            var users = userString.split(" ")
+            users.forEach(user => {
+                if (user.startsWith("<@") && user.endsWith(">")) {
+                    var str = user.replace("<@", "").replace(">", "").replace("!", "")
+                    if (client.users.cache.get(str)) usersID.push(str)
+                } else {
+                    if (client.users.cache.get(user)) usersID.push(user)
+                }
+            })
+        }
 
         var dataaa = new Date()
 
@@ -62,13 +77,18 @@ module.exports = {
         async function createToDo(title, description, date = false) {
 
             const db = (await databasePromise).db("to-do")
-
+            usersID.push(interaction.user.id)
             const toDo = {
                 title: title,
                 description: description,
                 date: date,
                 id: uuidv4(),
-                user: interaction.user.id
+                users: usersID,
+                creator: interaction.user.id,
+                timestamp: new Date().getTime(),
+                completed: false,
+                completedBy: null,
+                completedTimestamp: null
             }
 
             db.collection("to-do").insertOne(toDo)
@@ -76,7 +96,10 @@ module.exports = {
             let embed = new Discord.EmbedBuilder()
                 .setTitle("To-do created")
                 .setDescription("The to-do has been created successfully")
-                .addFields({ name: "Title", value: title, inline: true }, { name: "Description", value: description, inline: true }, { name: "Date", value: date ? discordTimestamp(date, "FULL") : "No date", inline: true })
+                .addFields({ name: "Title", value: title, inline: true },
+                    { name: "Description", value: description || "No Description", inline: true },
+                    { name: "Users [" + usersID.length + "]", value: usersID.length > 0 ? usersID.map(x => `<@${x}>`).join(", ") : "No users", inline: false },
+                    { name: "Date", value: date ? discordTimestamp(date, "FULL") : "No date", inline: true })
                 .setColor("Green")
 
             if (!date) {
@@ -84,12 +107,6 @@ module.exports = {
             } else {
                 interaction.editReply({ embeds: [embed], ephemeral: true, components: [] })
             }
-
-
-
-
-
-
         }
 
         if (date) {
