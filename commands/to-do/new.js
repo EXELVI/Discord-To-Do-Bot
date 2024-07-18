@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
 const { v4: uuidv4 } = require('uuid');
-
+const { discordTimestamp } = require("../../functions/general.js")
 module.exports = {
     name: "new",
     description: "Create a new to-do",
@@ -54,20 +54,38 @@ module.exports = {
             minute = dataaa.getMinutes() + 5 > 60 ? dataaa.getMinutes() - 55 : dataaa.getMinutes() + 5,
             second = dataaa.getSeconds()
 
-           async function createToDo(title, description, date = false) {
+        async function createToDo(title, description, date = false) {
 
-                const db = (await databasePromise).db("to-do")
+            const db = (await databasePromise).db("to-do")
 
-                const toDo = {
-                    title: title,
-                    description: description,
-                    date: date,
-                    id: uuidv4(),
-                    user: interaction.user.id
-                }
-                
-                
+            const toDo = {
+                title: title,
+                description: description,
+                date: date,
+                id: uuidv4(),
+                user: interaction.user.id
             }
+
+            db.collection("to-do").insertOne(toDo)
+
+            var embed = new Discord.EmbedBuilder()
+                .setTitle("To-do created")
+                .setDescription("The to-do has been created successfully")
+                .addFields({ name: "Title", value: title, inline: true }, { name: "Description", value: description, inline: true }, { name: "Date", value: date ? discordTimestamp(date, "FULL") : "No date", inline: true })
+                .setColor("Green")
+
+            if (interaction.isRepliable()) {
+                interaction.reply({ embeds: [embed], ephemeral: true })
+            } else {
+                interaction.editReply({ embeds: [embed], ephemeral: true, components: [] })
+            }
+
+
+
+
+
+
+        }
 
         if (date) {
 
@@ -130,7 +148,7 @@ module.exports = {
                     "```"
                 )
 
-            interaction.reply({ embeds: [embed], components: [rowUp10, rowUp, rowDown, rowDown10, row] }).then(() => {
+            interaction.reply({ embeds: [embed], components: [rowUp10, rowUp, rowDown, rowDown10, row], ephemeral: true }).then(() => {
                 const collector = interaction.channel.createMessageComponentCollector({ filter: i => i.user.id == interaction.user.id, time: 180000 })
 
                 collector.on("collect", async i => {
@@ -196,7 +214,7 @@ module.exports = {
                             `${date.getMonth().toString().padStart(2, "0")}   /   ${date.getDate().toString().padStart(2, "0")}   /   ${date.getHours().toString().padStart(2, "0")}  |   ${date.getMinutes().toString().padStart(2, "0")}   :   ${date.getSeconds().toString().padStart(2, "0")}` +
                             "```"
                         )
-                        interaction.editReply({ embeds: [embed], components: [rowUp10, rowUp, rowDown, rowDown10, row] })
+                        interaction.editReply({ embeds: [embed], components: [rowUp10, rowUp, rowDown, rowDown10, row], ephemeral: true })
                     }
                 })
 
@@ -204,7 +222,7 @@ module.exports = {
                     var confirm = new Discord.ButtonBuilder()
                         .setCustomId("confirm")
                         .setLabel("Confirm")
-                        .setStyle("Success")                        
+                        .setStyle("Success")
                         .setDisabled(true)
 
                     var cancel = new Discord.ButtonBuilder()
@@ -218,10 +236,10 @@ module.exports = {
 
                     if (reason == "time") {
                         embed.setColor("DarkOrange")
-                        interaction.editReply({ content: "Time's up!", components: [row], embeds: [embed] })
+                        interaction.editReply({ content: "Time's up!", components: [row], embeds: [embed], ephemeral: true })
                     } else if (reason == "cancel") {
                         embed.setColor("Red")
-                        interaction.editReply({ content: "Canceled", components: [row], embeds: [embed] })
+                        interaction.editReply({ content: "Canceled", components: [row], embeds: [embed], ephemeral: true })
                     } else {
                         interaction.editReply({ components: [row] })
                     }
