@@ -88,7 +88,8 @@ module.exports = {
                 timestamp: new Date().getTime(),
                 completed: false,
                 completedBy: null,
-                completedTimestamp: null
+                completedTimestamp: null,
+                reminded: false
             }
 
             db.collection("to-do").insertOne(toDo)

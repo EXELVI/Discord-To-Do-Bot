@@ -63,19 +63,34 @@ module.exports = {
             
             var todos = await db.collection("to-do").find().toArray()
             todos = todos.filter(x => x.users.includes(interaction.user.id))
-            var fields = []
-
+            var menuOptions = []
+            var embedFields = []
             
             for (var i = 0; todos.length > i; i++) {
-                fields.push({ name: (todos[i].completed ? ":white_check_mark: " : (!todos[i].date ? ":red_circle: " : ":orange_circle: ")) + todos[i].title, value: todos[i].description, inline: false })
+
+                var reminded = todos[i].reminded || false
+                console.log(todoDate, new Date().getTime(), reminded)
+                embedFields.push({ name: (todos[i].completed ? ":white_check_mark: " : (!todos[i].date ? ":red_circle: " : (!todos[i].date ? "🔴" : (reminded ? ":bell:" : ":no_bell:")))) + todos[i].title, value: todos[i].description || "No description", inline: false })
+                menuOptions.push({ label: todos[i].title, value: todos[i].id, description: todos[i].description || "No description", emoji: todos[i].completed ? "✅" : (!todos[i].date ? "🔴" : (reminded ? "🔔" : "�")) })
             }
 
+            var embed = new Discord.EmbedBuilder()
+                .setTitle("To-do")
+                .addFields(embedFields)
 
-            const embed = new Discord.EmbedBuilder()
-                .setTitle("To-do list")
-                .setFields(fields)
+            var menu = new Discord.StringSelectMenuBuilder()
+                .setCustomId("todo")
+                .setPlaceholder("Select a to-do")
+                .addOptions(menuOptions)
 
-            interaction.reply({ embeds: [embed] })
+            var row = new Discord.ActionRowBuilder()
+                .addComponents(menu)
+
+            interaction.reply({ embeds: [embed], components: [row] }).then(msg => {
+
+            })
+
+
 
                 
         }
