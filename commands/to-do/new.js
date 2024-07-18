@@ -49,10 +49,25 @@ module.exports = {
         var dataaa = new Date()
 
         var month = dataaa.getMonth() + 1,
-        day =    dataaa.getDate(), 
-        hour =   dataaa.getMinutes() + 5 > 60 ? dataaa.getHours() + 1 : dataaa.getHours(),
-        minute = dataaa.getMinutes() + 5 > 60 ? dataaa.getMinutes() - 55 : dataaa.getMinutes() + 5,
-        second = dataaa.getSeconds()
+            day = dataaa.getDate(),
+            hour = dataaa.getMinutes() + 5 > 60 ? dataaa.getHours() + 1 : dataaa.getHours(),
+            minute = dataaa.getMinutes() + 5 > 60 ? dataaa.getMinutes() - 55 : dataaa.getMinutes() + 5,
+            second = dataaa.getSeconds()
+
+           async function createToDo(title, description, date = false) {
+
+                const db = (await databasePromise).db("to-do")
+
+                const toDo = {
+                    title: title,
+                    description: description,
+                    date: date,
+                    id: uuidv4(),
+                    user: interaction.user.id
+                }
+                
+                
+            }
 
         if (date) {
 
@@ -104,11 +119,11 @@ module.exports = {
                 rowDown10.addComponents(buttonDown10)
 
             })
-            
 
-            const embed = new Discord.EmbedBuilder()
+
+            var embed = new Discord.EmbedBuilder()
                 .setTitle("Date picker")
-                .setDescription("Select the date for the to-do" + 
+                .setDescription("Select the date for the to-do" +
                     "\n\n```" +
                     "MM   /   DD   /   HH  |   mm   :   ss \n" +
                     `${month.toString().padStart(2, "0")}   /   ${day.toString().padStart(2, "0")}   /   ${hour.toString().padStart(2, "0")}  |   ${minute.toString().padStart(2, "0")}   :   ${second.toString().padStart(2, "0")}` +
@@ -116,11 +131,12 @@ module.exports = {
                 )
 
             interaction.reply({ embeds: [embed], components: [rowUp10, rowUp, rowDown, rowDown10, row] }).then(() => {
-                const collector = interaction.channel.createMessageComponentCollector({ filter: i => i.user.id == interaction.user.id, time: 60000 })
+                const collector = interaction.channel.createMessageComponentCollector({ filter: i => i.user.id == interaction.user.id, time: 180000 })
 
                 collector.on("collect", async i => {
                     i.deferUpdate()
-                
+
+
                     if (i.customId.startsWith("up10")) {
                         var index = i.customId.replace("up10", "")
                         if (index == 0) month += 10
@@ -149,6 +165,7 @@ module.exports = {
                         if (index == 2) hour -= 10
                         if (index == 3) minute -= 10
                         if (index == 4) second -= 10
+
                     } else if (i.customId == "confirm") {
                         var date = new Date()
                         date.setMonth(month)
@@ -157,29 +174,64 @@ module.exports = {
                         date.setMinutes(minute)
                         date.setSeconds(second)
                         console.log(date)
+                        createToDo(title, description, date)
                         collector.stop()
                     } else if (i.customId == "cancel") {
-                        collector.stop()
-                    }                    
-            
+                        collector.stop("cancel")
+                    }
 
-                
+                    if (i.customId != "confirm" && i.customId != "cancel") {
+                        var format = "MM|DD|HH|mm|ss"
+                        var date = new Date()
+                        format.split("|").forEach((x, i) => {
+                            if (x == "MM") date.setMonth(month)
+                            if (x == "DD") date.setDate(day)
+                            if (x == "HH") date.setHours(hour)
+                            if (x == "mm") date.setMinutes(minute)
+                            if (x == "ss") date.setSeconds(second)
+                        })
+                        embed.setDescription("Select the date for the to-do" +
+                            "\n\n```" +
+                            "MM   /   DD   /   HH  |   mm   :   ss \n" +
+                            `${date.getMonth().toString().padStart(2, "0")}   /   ${date.getDate().toString().padStart(2, "0")}   /   ${date.getHours().toString().padStart(2, "0")}  |   ${date.getMinutes().toString().padStart(2, "0")}   :   ${date.getSeconds().toString().padStart(2, "0")}` +
+                            "```"
+                        )
+                        interaction.editReply({ embeds: [embed], components: [rowUp10, rowUp, rowDown, rowDown10, row] })
+                    }
+                })
 
+                collector.on("end", async (collected, reason) => {
+                    var confirm = new Discord.ButtonBuilder()
+                        .setCustomId("confirm")
+                        .setLabel("Confirm")
+                        .setStyle("Success")                        
+                        .setDisabled(true)
+
+                    var cancel = new Discord.ButtonBuilder()
+                        .setCustomId("cancel")
+                        .setLabel("Cancel")
+                        .setStyle("Danger")
+                        .setDisabled(true)
+
+                    var row = new Discord.ActionRowBuilder()
+                        .addComponents(confirm, cancel)
+
+                    if (reason == "time") {
+                        embed.setColor("DarkOrange")
+                        interaction.editReply({ content: "Time's up!", components: [row], embeds: [embed] })
+                    } else if (reason == "cancel") {
+                        embed.setColor("Red")
+                        interaction.editReply({ content: "Canceled", components: [row], embeds: [embed] })
+                    } else {
+                        interaction.editReply({ components: [row] })
+                    }
                 })
             })
 
+        } else {
+            createToDo(title, description)
         }
 
-        const db = (await databasePromise).db("to-do")
-
-        const toDo = {
-            title: title,
-            description: description,
-            date: date,
-            id: uuidv4(),
-            user: interaction.user.id
-        }
-        console.log(toDo)
     }
 }
 
