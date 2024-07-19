@@ -3,31 +3,34 @@ require('dotenv').config()
 
 
 const Discord = require('discord.js');
-
+const { discordTimestamp } = require("./functions/general.js")
 const manager = require('./manager.js');
-//Facy logging
+
 manager.on('shardCreate', shard => console.log(`☑️ Launched shard #${shard.id}`));
 
 manager.spawn();
 
 const databasePromise = require('./db.js');
 
+
 databasePromise.then(async database => {
 
     setInterval(async () => {
         var todos = await database.db("to-do").collection("to-do").find().toArray()
         todos = todos.filter(x => !x.completed && !x.reminded && x.date)
-
+        
         todos.forEach(async todo => {
             if (todo.reminded) return;
 
             var todoDate = new Date(todo.date).getTime();
             var now = new Date().getTime();
+            console.log(todoDate, now, todoDate <= now)
             if (todoDate <= now) {
+                console.log("Sending reminder for " + todo.id)
                 var users = todo.users;
                 users.forEach(async user => {
                     var embed = new Discord.EmbedBuilder()
-                    .setTitle("To-do reminder")
+                    .setTitle("🔔 To-do reminder 🔔")
                     .setDescription(todo.title)
                     .addFields([
                         {name : "Description", value: todo.description || "No description"},

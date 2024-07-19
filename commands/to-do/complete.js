@@ -76,13 +76,79 @@ module.exports = {
             return interaction.reply("No to-dos found")
         }
 
-        if (todos.length === 1) {
-                
-        } else {
-          
+      
+            var menuOptions = []
+
+            for (var i = 0; todos.length > i; i++) {
+                const relativeDate = moment(todos[i].timestamp).fromNow()
+                var reminded = todos[i].reminded || false
+                menuOptions.push({ label: todos[i].title, emoji: todos[i].completed ? "✅" : (!todos[i].date ? "🔴" : (reminded ? "🔔" : "🔕")), value: todos[i].id, description: relativeDate + " | " + (todos[i].description || "No description") })
+            }
+
+            menuOptions.sort((a, b) => {
+                if (a.emoji === "✅") return 1
+                if (b.emoji === "✅") return -1
+                return 0
+            })
+
+            const embed = new Discord.EmbedBuilder()
+                .setTitle("Select to-dos to set as completed")
+                .setDescription("Select the to-dos you want to set as completed")
+
+            const menu = new Discord.StringSelectMenuBuilder()
+                .setCustomId('todo')
+                .setPlaceholder('Select to-dos to set as completed')
+                .addOptions(menuOptions)
+                .setMaxValues(menuOptions.length)
+                .setMinValues(1)
 
 
-        }
+            const row = new Discord.ActionRowBuilder()
+                .addComponents(menu)
+
+            interaction.reply({ components: [row], embeds: [embed] }).then(() => {
+
+                var collector = interaction.channel.createMessageComponentCollector({ filter: i => i.user.id === interaction.user.id, time: 60000 })
+                // don't ask for confirmation
+                collector.on('collect', async i => {
+                    if (i.customId === 'todo') {
+                        i.deferUpdate()
+                        var toComplete = i.values
+                        for (var i = 0; toComplete.length > i; i++) {
+                            await db.collection("to-do").updateOne({ id: toComplete[i] }, { $set: { completed: !todos.find(t => t.id === toComplete[i]).completed, completedTimestamp: Date.now() } })
+                        }
+                        var embed = new Discord.EmbedBuilder()
+                            .setTitle("To-dos set as completed")
+                            .setDescription("The selected to-dos have been set as completed")
+                            .setColor("Green")
+                        interaction.editReply({ embeds: [embed] })
+                        collector.stop()
+                    }
+                })
+
+                collector.on('end', async collected => {
+                    var menu = new Discord.StringSelectMenuBuilder()
+                        .setCustomId('todo')
+                        .setPlaceholder('Select to-dos to set as completed')
+                        .addOptions(menuOptions)
+                        .setMaxValues(menuOptions.length)
+                        .setMinValues(1)
+                        .setDisabled(true)
+
+                    var row = new Discord.ActionRowBuilder()
+                        .addComponents(menu)
+
+                    interaction.editReply({ components: [row] })
+                }
+                )
+
+
+            })
+
+
+
+
+        
     }
 }
 

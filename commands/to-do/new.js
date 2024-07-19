@@ -166,8 +166,8 @@ module.exports = {
                 .setTitle("Date picker")
                 .setDescription("Select the date for the to-do" +
                     "\n\n```" +
-                    "MM   /   DD   /   HH  |   mm   :   ss \n" +
-                    `${month.toString().padStart(2, "0")}   /   ${day.toString().padStart(2, "0")}   /   ${hour.toString().padStart(2, "0")}  |   ${minute.toString().padStart(2, "0")}   :   ${second.toString().padStart(2, "0")}` +
+                    "MM   /   DD   |   HH  :   mm   :   ss \n" +
+                    `${month.toString().padStart(2, "0")}   /   ${day.toString().padStart(2, "0")}   |   ${hour.toString().padStart(2, "0")}  :   ${minute.toString().padStart(2, "0")}   :   ${second.toString().padStart(2, "0")}` +
                     "```"
                 )
 
@@ -215,7 +215,7 @@ module.exports = {
                         date.setMinutes(minute)
                         date.setSeconds(second)
                         console.log(date)
-                        createToDo(title, description, date)
+                        createToDo(title, description, date.getTime())
                         collector.stop()
                     } else if (i.customId == "cancel") {
                         collector.stop("cancel")
@@ -233,8 +233,8 @@ module.exports = {
                         })
                         embed.setDescription("Select the date for the to-do" +
                             "\n\n```" +
-                            "MM   /   DD   /   HH  |   mm   :   ss \n" +
-                            `${date.getMonth().toString().padStart(2, "0")}   /   ${date.getDate().toString().padStart(2, "0")}   /   ${date.getHours().toString().padStart(2, "0")}  |   ${date.getMinutes().toString().padStart(2, "0")}   :   ${date.getSeconds().toString().padStart(2, "0")}` +
+                            "MM   /   DD   |   HH  :   mm   :   ss \n" +
+                            `${date.getMonth().toString().padStart(2, "0")}   /   ${date.getDate().toString().padStart(2, "0")}   |   ${date.getHours().toString().padStart(2, "0")}  :   ${date.getMinutes().toString().padStart(2, "0")}   :   ${date.getSeconds().toString().padStart(2, "0")}` +
                             "```"
                         )
                         interaction.editReply({ embeds: [embed], components: [rowUp10, rowUp, rowDown, rowDown10, row], ephemeral: true })
