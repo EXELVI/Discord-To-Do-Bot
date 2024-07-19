@@ -36,25 +36,7 @@ module.exports = {
 */
 
     async execute(interaction,) {
-        /**
-         Example:
-{
-    "title": "Test",
-    "description": "A test todo",
-    "date": false, //Reminder
-    "id": "8fea4211-700e-4426-8c39-eee939f5c0ce",
-    "users": [
-      "1262666648498995273",
-      "412625961402630175",
-      "462339171537780737"
-    ],
-    "creator": "462339171537780737",
-    "timestamp": 1721299443166, //Created timestamp
-    "completed": false,
-    "completedBy": null,
-    "completedTimestamp": null
-  }
-         */
+
         const databasePromise = await require("../../db.js")
         const client = require("../../client.js")
 
@@ -99,14 +81,12 @@ module.exports = {
             .setCustomId('todo')
             .setPlaceholder('Select to-dos to edit')
             .addOptions(menuOptions)
-            .setMaxValues(menuOptions.length)
-            .setMinValues(1)
 
         const row = new Discord.ActionRowBuilder()
-            .addComponent(menu)
+            .addComponents(menu)
 
         interaction.reply({ embeds: [embed], components: [row] }).then(() => {
-            const collector = interaction.channel.createMessageComponentCollector({ componentType: 'SELECT_MENU' });
+            const collector = interaction.channel.createMessageComponentCollector({ filter: i => i.isStringSelectMenu(), time: 60000 });
 
             collector.on('collect', async i => {
                 if (i.user.id !== interaction.user.id) {
@@ -119,60 +99,41 @@ module.exports = {
                     return i.reply({ content: "No to-do found", ephemeral: true });
                 }
 
-                i.deferUpdate()
-
                 var modal = new Discord.ModalBuilder()
                     .setTitle("Edit to-do")
-                    .setDescription("Edit the to-do")
-                    .setColor("blurple")
-                    .setFooter("To-do ID: " + todo.id)
-                    .addComponents([
-                        new Discord.ActionRowBuilder()
-                            .addComponent(new Discord.ButtonBuilder()
-                                .setCustomId("title")
-                                .setLabel("Title")
-                                .setStyle("PRIMARY")
-                                .setValue(todo.title)
-                                .setDisabled(todo.completed)
-                            )
-                    ])
-                    .addComponents([
-                        new Discord.ActionRowBuilder()
-                            .addComponent(new Discord.ButtonBuilder()
-                                .setCustomId("description")
-                                .setLabel("Description")
-                                .setStyle("PRIMARY")
-                                .setValue(todo.description)
-                                .setDisabled(todo.completed)
-                            )
-                    ])
-                    .addComponents([
-                        new Discord.ActionRowBuilder()
-                            .addComponent(new Discord.ButtonBuilder()
-                                .setCustomId("date")
-                                .setLabel("Date")
-                                .setStyle("PRIMARY")
-                                .setValue(todo.date ? new Date(todo.date).toISOString() : "")
-                                .setDisabled(todo.completed)
-                            )
-                    ])
-                    .addComponents([
-                        new Discord.ActionRowBuilder()
-                            .addComponent(new Discord.ButtonBuilder()
-                                .setCustomId("completed")
-                                .setLabel("Completed")
-                                .setStyle("SUCCESS")
-                                .setDisabled(todo.completed)
-                            )
-                    ])
-                    .addComponents([
-                        new Discord.ActionRowBuilder()
-                            .addComponent(new Discord.ButtonBuilder()
-                                .setCustomId("delete")
-                                .setLabel("Delete")
-                                .setStyle("DANGER")
-                            )
-                    ])
+                    .setCustomId("edit-" + todo.id)
+
+                /**
+Example:
+{
+"title": "Test",
+"description": "A test todo",
+"date": false, //Reminder
+"id": "8fea4211-700e-4426-8c39-eee939f5c0ce",
+"users": [
+"1262666648498995273",
+"412625961402630175",
+"462339171537780737"
+],
+"creator": "462339171537780737",
+"timestamp": 1721299443166, //Created timestamp
+"completed": false,
+"completedBy": null,
+"completedTimestamp": null
+}
+*/
+
+                var titleInput = new Discord.ActionRowBuilder().addComponents(new Discord.TextInputBuilder().setCustomId("title").setLabel("Title").setValue(todo.title || "Error?!?").setRequired(false).setStyle(Discord.TextInputStyle.Short))
+                var descriptionInput = new Discord.ActionRowBuilder().addComponents(new Discord.TextInputBuilder().setCustomId("description").setLabel("Description").setValue(todo.description || "No description").setRequired(false).setStyle(Discord.TextInputStyle.Paragraph))
+                var dateInput = new Discord.ActionRowBuilder().addComponents(new Discord.TextInputBuilder().setCustomId("date").setLabel("Reminder Date").setValue(moment(todo.date).format("YYYY-MM-DD HH:mm") || "No date").setRequired(false).setStyle(Discord.TextInputStyle.Short))
+              //  var usersInput = new Discord.ActionRowBuilder().addComponents(new Discord.TextInputBuilder().setCustomId("users").setLabel("Users").setValue(todo.users.map( x => x).join(", ") || "No users?!?!").setRequired(false).setStyle(Discord.TextInputStyle.Short))
+
+                modal.addComponents(titleInput, descriptionInput, dateInput)
+
+
+
+                i.showModal(modal)
+
 
             });
         })
