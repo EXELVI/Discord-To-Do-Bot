@@ -101,7 +101,7 @@ module.exports = {
 
                 var modal = new Discord.ModalBuilder()
                     .setTitle("Edit to-do")
-                    .setCustomId("edit-" + todo.id)
+                    .setCustomId("edit|" + todo.id)
 
                 /**
 Example:
