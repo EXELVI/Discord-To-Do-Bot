@@ -67,6 +67,9 @@ module.exports = {
 
             var todos = await db.collection("to-do").find().toArray()
             todos = todos.filter(x => x.users.includes(interaction.user.id))
+
+            if (todos.length < 1) return interaction.reply({ content: "No to-do found", ephemeral: true })
+
             var menuOptions = []
             var embedFields = []
 
@@ -194,7 +197,7 @@ module.exports = {
                 })
             
             } else {
-                if (!todos) return interaction.reply({ content: "No to-do found", ephemeral: true })
+                if (!todos[0]) return interaction.reply({ content: "No to-do found", ephemeral: true })
                 var todo = todos[0]
                 var embed = new Discord.EmbedBuilder()
                     .setTitle(todo.title)

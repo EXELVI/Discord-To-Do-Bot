@@ -85,11 +85,20 @@ module.exports = {
         if (todos.length === 1) {
             const todo = todos[0]
             const todoEmbed = new Discord.EmbedBuilder()
-                .setTitle(todo.title)
-                .setDescription(todo.description)
-                .addField("Creator", `<@${todo.creator}>`, true)
-                .addField("Created", discordTimestamp(todo.timestamp, "FULL"), true)
-                .addField("Completed", todo.completed ? "Yes" : "No", true)
+                .setTitle("Do you want to delete this to-do?")
+                .setDescription("**" + todo.title + "** \n" + (todo.description || "No description"))
+                .addFields([{
+                    name: "Created",
+                    value: todo.date ? discordTimestamp(todo.timestamp, "FULL") : "No date",
+                    inline: true
+                }, {
+                    name: "Creator",
+                    value: "<@" + todo.creator + ">",
+                    inline: true
+                }, {
+                    name: "Completed",
+                    value: todo.completed ? "Yes" : "No",
+                }])
 
             const confirm = new Discord.ButtonBuilder()
                 .setCustomId('confirm')
@@ -100,7 +109,7 @@ module.exports = {
                 .setLabel('Cancel')
                 .setStyle('Danger')
 
-            const row = new Discord.MessageActionRow()
+            const row = new Discord.ActionRowBuilder()
                 .addComponents(confirm, cancel)
 
             interaction.reply({ embeds: [todoEmbed], components: [row] }).then(() => {
@@ -109,28 +118,31 @@ module.exports = {
                 collector.on('collect', async i => {
                     if (i.customId === 'confirm') {
                         await db.collection("to-do").deleteOne({ id: todo.id })
-                        i.update({ content: 'Deleted', components: [] });
+                        todoEmbed.setColor("Red")
+                        i.update({ content: 'Deleted', embeds: [todoEmbed] });
+
                         collector.stop();
                     } else if (i.customId === 'cancel') {
-                        i.update({ content: 'Cancelled', components: [] });
+                        i.update({ content: 'Cancelled'});
                         collector.stop();
                     }
                 });
 
                 collector.on('end', (collected, reason) => {
-                    var confirm = new Discord.MessageButton()
+                    var confirm = new Discord.ButtonBuilder()
                         .setCustomId('confirm')
                         .setLabel('Confirm')
                         .setStyle('Success')
                         .setDisabled(true)
-                    var cancel = new Discord.MessageButton()
+                    var cancel = new Discord.ButtonBuilder()
                         .setCustomId('cancel')
                         .setLabel('Cancel')
                         .setStyle('Danger')
                         .setDisabled(true)
-                    const row = new Discord.MessageActionRow()
+                    const row = new Discord.ActionRowBuilder()
                         .addComponents(confirm, cancel)
-                    interaction.editReply({ components: [row], content: reason === 'time' ? 'Time is up!' : 'Interaction ended!' });
+                    if (reason === 'time') interaction.editReply({ components: [row], content: 'Time is up!' });
+                    else interaction.editReply({ components: [row] })
                 });
             });
         } else {
@@ -143,7 +155,7 @@ module.exports = {
             }
 
 
-            
+
             const menu = new Discord.StringSelectMenuBuilder()
                 .setCustomId('todo')
                 .setPlaceholder('Select to-dos to delete')
@@ -198,18 +210,18 @@ module.exports = {
                                     .setDisabled(true)
                                 const row = new Discord.ActionRowBuilder()
                                     .addComponents(confirm, cancel)
-                              if (reason === 'time') interaction.editReply({ components: [row], content: 'Time is up!' });
-                              else interaction.editReply({ components: [row] })
+                                if (reason === 'time') interaction.editReply({ components: [row], content: 'Time is up!' });
+                                else interaction.editReply({ components: [row] })
                             });
                         });
                     }
 
                 })
 
-                    
-              
+
+
             })
-                
+
         }
     }
 }
