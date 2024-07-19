@@ -117,10 +117,24 @@ module.exports = {
                         for (var i = 0; toComplete.length > i; i++) {
                             await db.collection("to-do").updateOne({ id: toComplete[i] }, { $set: { completed: !todos.find(t => t.id === toComplete[i]).completed, completedTimestamp: Date.now() } })
                         }
+
+                        var todoSetUncompleted = toComplete.filter(x => !todos.find(t => t.id === x).completed).length
+                        var todoSetCompleted = toComplete.filter(x => todos.find(t => t.id === x).completed).length
+
                         var embed = new Discord.EmbedBuilder()
                             .setTitle("To-dos set as completed")
-                            .setDescription("The selected to-dos have been set as completed")
                             .setColor("Green")
+
+                            
+                            if (todoSetUncompleted && todoSetCompleted) { 
+                                embed.setDescription(`${todoSetUncompleted} to-dos set as uncompleated and ${todoSetCompleted} to-dos set as completed`)
+                            } else if (todoSetUncompleted) {
+                                embed.setDescription(`${todoSetUncompleted} to-dos set as uncompleated`)
+                            }
+                            else {
+                                embed.setDescription(`${todoSetCompleted} to-dos set as completed`)
+                            }
+
                         interaction.editReply({ embeds: [embed] })
                         collector.stop()
                     }
