@@ -1,6 +1,10 @@
 const Discord = require('discord.js');
 const { v4: uuidv4 } = require('uuid');
 const { discordTimestamp } = require("../../functions/general.js")
+
+const moment = require('moment');
+
+
 module.exports = {
     name: "show",
     description: "Shows all to-do",
@@ -68,9 +72,11 @@ module.exports = {
             
             for (var i = 0; todos.length > i; i++) {
 
+                const relativeDate = moment(todos[i].timestamp).fromNow()
+
                 var reminded = todos[i].reminded || false
-                embedFields.push({ name: (todos[i].completed ? ":white_check_mark: " : (!todos[i].date ? ":red_circle: " : (!todos[i].date ? "🔴" : (reminded ? ":bell:" : ":no_bell:")))) + todos[i].title, value: todos[i].description || "No description", inline: false })
-                menuOptions.push({ label: todos[i].title, value: todos[i].id, description: todos[i].description || "No description", emoji: todos[i].completed ? "✅" : (!todos[i].date ? "🔴" : (reminded ? "🔔" : "🔕")) })
+                embedFields.push({ name: (todos[i].completed ? ":white_check_mark: " : (!todos[i].date ? ":red_circle: " : (!todos[i].date ? "🔴" : (reminded ? ":bell:" : ":no_bell:")))) + todos[i].title, value: discordTimestamp(todos[i].timestamp, "Relative") + " | " + (todos[i].description || "No description")})
+                menuOptions.push({ label: todos[i].title,  emoji: todos[i].completed ? "✅" : (!todos[i].date ? "🔴" : (reminded ? "🔔" : "🔕")), value: todos[i].id, description: relativeDate + " | " + (todos[i].description || "No description")})
             }
 
             var embed = new Discord.EmbedBuilder()
