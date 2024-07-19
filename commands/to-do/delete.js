@@ -27,7 +27,7 @@ module.exports = {
                 required: false
             },
         ]
-            
+
     },
     /**
 * Esegue la gestione dell'evento di creazione di un'interazione.
@@ -62,9 +62,155 @@ module.exports = {
 
         const title = interaction.options.getString("title")
         const id = interaction.options.getString("id")
- 
-       
 
+        //If !title or !id show all
+        //If title show all with title
+        //if ID directly delete 
+        // Otherwise select menu with multiple options
+        // Ask for confirmation
+
+        let todos = []
+        if (title) {
+            todos = await db.collection("to-do").find({ title: title }).toArray()
+        } else if (id) {
+            todos = await db.collection("to-do").find({ id: id }).toArray()
+        } else {
+            todos = await db.collection("to-do").find({}).toArray()
+        }
+
+        if (todos.length === 0) {
+            return interaction.reply("No to-dos found")
+        }
+
+        if (todos.length === 1) {
+            const todo = todos[0]
+            const todoEmbed = new Discord.EmbedBuilder()
+                .setTitle(todo.title)
+                .setDescription(todo.description)
+                .addField("Creator", `<@${todo.creator}>`, true)
+                .addField("Created", discordTimestamp(todo.timestamp, "FULL"), true)
+                .addField("Completed", todo.completed ? "Yes" : "No", true)
+
+            const confirm = new Discord.ButtonBuilder()
+                .setCustomId('confirm')
+                .setLabel('Confirm')
+                .setStyle('Success')
+            const cancel = new Discord.ButtonBuilder()
+                .setCustomId('cancel')
+                .setLabel('Cancel')
+                .setStyle('Danger')
+
+            const row = new Discord.MessageActionRow()
+                .addComponents(confirm, cancel)
+
+            interaction.reply({ embeds: [todoEmbed], components: [row] }).then(() => {
+                const filter = i => i.user.id === interaction.user.id;
+                const collector = interaction.channel.createMessageComponentCollector({ filter, time: 15000 });
+                collector.on('collect', async i => {
+                    if (i.customId === 'confirm') {
+                        await db.collection("to-do").deleteOne({ id: todo.id })
+                        i.update({ content: 'Deleted', components: [] });
+                        collector.stop();
+                    } else if (i.customId === 'cancel') {
+                        i.update({ content: 'Cancelled', components: [] });
+                        collector.stop();
+                    }
+                });
+
+                collector.on('end', (collected, reason) => {
+                    var confirm = new Discord.MessageButton()
+                        .setCustomId('confirm')
+                        .setLabel('Confirm')
+                        .setStyle('Success')
+                        .setDisabled(true)
+                    var cancel = new Discord.MessageButton()
+                        .setCustomId('cancel')
+                        .setLabel('Cancel')
+                        .setStyle('Danger')
+                        .setDisabled(true)
+                    const row = new Discord.MessageActionRow()
+                        .addComponents(confirm, cancel)
+                    interaction.editReply({ components: [row], content: reason === 'time' ? 'Time is up!' : 'Interaction ended!' });
+                });
+            });
+        } else {
+            var menuOptions = []
+
+            for (var i = 0; todos.length > i; i++) {
+                const relativeDate = moment(todos[i].timestamp).fromNow()
+                var reminded = todos[i].reminded || false
+                menuOptions.push({ label: todos[i].title, emoji: todos[i].completed ? "✅" : (!todos[i].date ? "🔴" : (reminded ? "🔔" : "🔕")), value: todos[i].id, description: relativeDate + " | " + (todos[i].description || "No description") })
+            }
+
+
+            
+            const menu = new Discord.StringSelectMenuBuilder()
+                .setCustomId('todo')
+                .setPlaceholder('Select to-dos to delete')
+                .addOptions(menuOptions)
+                .setMaxValues(menuOptions.length)
+                .setMinValues(1)
+
+            const row = new Discord.ActionRowBuilder()
+                .addComponents(menu)
+
+            interaction.reply({ embeds: [{ title: "Select to-dos to delete" }], components: [row] }).then(msg => {
+                msg.awaitMessageComponent({ filter: i => i.user.id === interaction.user.id, time: 60000 }).then(i => {
+                    if (i.customId === 'todo') {
+                        i.deferUpdate()
+                        var toDelete = i.values
+                        var confirm = new Discord.ButtonBuilder()
+                            .setCustomId('confirm')
+                            .setLabel('Confirm')
+                            .setStyle('Success')
+                        var cancel = new Discord.ButtonBuilder()
+                            .setCustomId('cancel')
+                            .setLabel('Cancel')
+                            .setStyle('Danger')
+
+                        const row = new Discord.ActionRowBuilder()
+                            .addComponents(confirm, cancel)
+
+                        interaction.editReply({ content: "Are you sure you want to delete these to-dos?", components: [row] }).then(() => {
+                            const filter = i => i.user.id === interaction.user.id;
+                            const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000 });
+                            collector.on('collect', async i => {
+                                if (i.customId === 'confirm') {
+                                    await db.collection("to-do").deleteMany({ id: { $in: toDelete } })
+                                    i.update({ content: 'Deleted', components: [] });
+                                    collector.stop();
+                                } else if (i.customId === 'cancel') {
+                                    i.update({ content: 'Cancelled', components: [] });
+                                    collector.stop();
+                                }
+                            });
+
+                            collector.on('end', (collected, reason) => {
+                                var confirm = new Discord.ButtonBuilder()
+                                    .setCustomId('confirm')
+                                    .setLabel('Confirm')
+                                    .setStyle('Success')
+                                    .setDisabled(true)
+                                var cancel = new Discord.ButtonBuilder()
+                                    .setCustomId('cancel')
+                                    .setLabel('Cancel')
+                                    .setStyle('Danger')
+                                    .setDisabled(true)
+                                const row = new Discord.ActionRowBuilder()
+                                    .addComponents(confirm, cancel)
+                              if (reason === 'time') interaction.editReply({ components: [row], content: 'Time is up!' });
+                              else interaction.editReply({ components: [row] })
+                            });
+                        });
+                    }
+
+                })
+
+                    
+              
+            })
+                
+        }
     }
 }
 
