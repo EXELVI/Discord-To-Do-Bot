@@ -62,7 +62,7 @@ module.exports = {
 
         const title = interaction.options.getString("title")
         const id = interaction.options.getString("id")
-
+ 
        
 
     }
