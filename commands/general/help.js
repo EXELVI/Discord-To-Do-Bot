@@ -3,7 +3,7 @@ const Discord = require('discord.js');
 module.exports = {
     name: "help",
     description: "Shows all commands",
-    permission: [],
+    permission: ["VIEW_CHANNEL"],
     category: "general",
     async execute(interaction) {
         const databasePromise = await require("../../db.js")
@@ -27,20 +27,20 @@ module.exports = {
 
         client.commands.forEach(command => {
             if (command.category == "general")
-                page1commands.push({ name: `</${command.name}:${commandsid.find(c => c.name == command.name).id}>` + " " + (command.permission ? "🔒" : "🔓"), value: command.description })
+                page1commands.push({ name: `</${command.name}:${commandsid.find(c => c.name == command.name).id}>` + " " /*+ (command.permission?.lenght != 0 ? "🔒" : "🔓")*/, value: command.description })
             if (command.category == "to-do")
-                page2commands.push({ name: `</${command.name}:${commandsid.find(c => c.name == command.name).id}>` + " " + (command.permission ? "🔒" : "🔓"), value: command.description })
+                page2commands.push({ name: `</${command.name}:${commandsid.find(c => c.name == command.name).id}>` + " " /*+ (command.permission?.lenght != 0  ? "🔒" : "🔓")*/, value: command.description })
         })
         page1.addFields(page1commands);
         page2.addFields(page2commands);
 
-        let button1 = new Discord.ButtonBuilder()
-            .setCustomId("Next")
+        let button2 = new Discord.ButtonBuilder()
+            .setCustomId("next")
             .setLabel("Next")
             .setStyle("Primary")
 
-        let button2 = new Discord.ButtonBuilder()
-            .setCustomId("Previous")
+        let button1 = new Discord.ButtonBuilder()
+            .setCustomId("previous")
             .setLabel("Previous")
             .setStyle("Primary")
 
@@ -61,22 +61,24 @@ module.exports = {
                         return i.reply({ content: "You can't interact with this", ephemeral: true });
                     }
 
-                    if (i.customId == "Previous") {
+                    if (i.customId == "previous") {
+                        
                         page--
                         if (page < 1) page = 1
                     }
-                    if (i.customId == "Next") {
+                    if (i.customId == "next") {
+                        
                         page++
                         if (page > totalPage) page = totalPage
                     }
 
-                    let button1 = new Discord.ButtonBuilder()
-                        .setCustomId("Next")
+                    let button2 = new Discord.ButtonBuilder()
+                        .setCustomId("next")
                         .setLabel("Next")
                         .setStyle("Primary")
 
-                    let button2 = new Discord.ButtonBuilder()
-                        .setCustomId("Previous")
+                    let button1 = new Discord.ButtonBuilder()
+                        .setCustomId("previous")
                         .setLabel("Previous")
                         .setStyle("Primary")
 

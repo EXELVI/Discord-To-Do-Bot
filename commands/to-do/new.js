@@ -59,9 +59,14 @@ module.exports = {
             users.forEach(user => {
                 if (user.startsWith("<@") && user.endsWith(">")) {
                     var str = user.replace("<@", "").replace(">", "").replace("!", "")
-                    if (client.users.cache.get(str)) usersID.push(str)
+                    if (client.users.cache.get(str)) {
+                        if (!usersID.includes(str)) usersID.push(str)
+                    }
                 } else {
-                    if (client.users.cache.get(user)) usersID.push(user)
+                    if (client.users.cache.get(user)) {
+                        if (!usersID.includes(user)) usersID.push(user)
+                    }
+                        
                 }
             })
         }

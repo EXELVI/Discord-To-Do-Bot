@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const { permission } = require('process');
+const { discordTimestamp } = require("../../functions/general.js")
 
 module.exports = {
     name: "test",
@@ -12,7 +12,7 @@ module.exports = {
 * @returns {Promise<void>} - Una Promise che rappresenta l'avvenuta gestione dell'interazione.
 */
     async execute(interaction) {
-
+        const client = require("../../client.js")
         var clients = await client.shard.broadcastEval(x => { return { ready: x.isReady(), ping: x.ws.ping } })
         var fields = []
 
