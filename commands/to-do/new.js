@@ -77,7 +77,9 @@ module.exports = {
         async function createToDo(title, description, date = false) {
 
             const db = (await databasePromise).db("to-do")
-            usersID.push(interaction.user.id)
+           
+            if (!usersID.includes(interaction.user.id)) usersID.push(interaction.user.id)
+
             const toDo = {
                 title: title,
                 description: description,
@@ -209,12 +211,11 @@ module.exports = {
 
                     } else if (i.customId == "confirm") {
                         var date = new Date()
-                        date.setMonth(month)
+                        date.setMonth(month - 1)
                         date.setDate(day)
                         date.setHours(hour)
                         date.setMinutes(minute)
                         date.setSeconds(second)
-                        console.log(date)
                         createToDo(title, description, date.getTime())
                         collector.stop()
                     } else if (i.customId == "cancel") {

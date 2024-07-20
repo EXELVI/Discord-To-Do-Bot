@@ -115,7 +115,7 @@ module.exports = {
                         i.deferUpdate()
                         var toComplete = i.values
                         for (var i = 0; toComplete.length > i; i++) {
-                            await db.collection("to-do").updateOne({ id: toComplete[i] }, { $set: { completed: !todos.find(t => t.id === toComplete[i]).completed, completedTimestamp: Date.now() } })
+                            await db.collection("to-do").updateOne({ id: toComplete[i] }, { $set: { completed: !todos.find(t => t.id === toComplete[i]).completed, completedTimestamp: Date.now(), completedBy: interaction.user.id } })
                         }
 
                         var todoSetUncompleted = toComplete.filter(x => !todos.find(t => t.id === x).completed).length
