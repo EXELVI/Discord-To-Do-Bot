@@ -78,7 +78,7 @@ module.exports = {
             .setDescription("Select the to-dos you want to edit")
 
         const menu = new Discord.StringSelectMenuBuilder()
-            .setCustomId('todo')
+            .setCustomId('todo|edit')
             .setPlaceholder('Select to-dos to edit')
             .addOptions(menuOptions)
 
@@ -89,6 +89,7 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ filter: i => i.isStringSelectMenu(), time: 60000 });
 
             collector.on('collect', async i => {
+                if (i.customId !== 'todo|edit') return;
                 if (i.user.id !== interaction.user.id) {
                     return i.reply({ content: "You can't interact with this menu", ephemeral: true });
                 }

@@ -118,8 +118,8 @@ module.exports = {
                             await db.collection("to-do").updateOne({ id: toComplete[i] }, { $set: { completed: !todos.find(t => t.id === toComplete[i]).completed, completedTimestamp: Date.now(), completedBy: interaction.user.id } })
                         }
 
-                        var todoSetUncompleted = toComplete.filter(x => !todos.find(t => t.id === x).completed).length
-                        var todoSetCompleted = toComplete.filter(x => todos.find(t => t.id === x).completed).length
+                        var todoSetUncompleted = toComplete.filter(x => todos.find(t => t.id === x).completed).length
+                        var todoSetCompleted = toComplete.filter(x => !todos.find(t => t.id === x).completed).length
 
                         var embed = new Discord.EmbedBuilder()
                             .setTitle("To-dos set as completed")
